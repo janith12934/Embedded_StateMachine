@@ -16,13 +16,12 @@ State_t stateTx;
  * 						Function prototypes
  *----------------------------------------------------------------------------*/
 
-static inline void handleIdle(struct StateMachine* sm, Event event);
-static inline void handleStart(struct StateMachine* sm, Event event);
-static inline void handleCooling(struct StateMachine* sm, Event event);
-static inline void handleStop(struct StateMachine* sm, Event event);
-static inline void handleError(struct StateMachine* sm, Event event);
-static inline void handleReset(struct StateMachine* sm, Event event);
-extern void blinkIndicator(uint8_t mode, uint32_t delayMs);
+static inline void handleSTATE_1(struct StateMachine* sm, Event event);
+static inline void handleSTATE_2(struct StateMachine* sm, Event event);
+static inline void handleSTATE_3(struct StateMachine* sm, Event event);
+static inline void handleSTATE_4(struct StateMachine* sm, Event event);
+static inline void handleSTATE_5(struct StateMachine* sm, Event event);
+static inline void handleSTATE_6(struct StateMachine* sm, Event event);
 
 
 /*----------------------------------------------------------------------------
@@ -34,13 +33,13 @@ extern void blinkIndicator(uint8_t mode, uint32_t delayMs);
  * @param sm: Pointer to the state machine structure
  */
 void initStateMachine(StateMachine* sm) {
-    sm->currentState = STATE_IDLE;
-    sm->stateFunctions[STATE_IDLE] 		= handleIdle;
-    sm->stateFunctions[STATE_START] 	= handleStart;
-    sm->stateFunctions[STATE_COOLING] 	= handleCooling;
-    sm->stateFunctions[STATE_STOP] 		= handleStop;
-    sm->stateFunctions[STATE_ERROR] 	= handleError;
-    sm->stateFunctions[STATE_RESET] 	= handleReset;
+    sm->currentState = STATE_1;
+    sm->stateFunctions[STATE_1] 	= handleSTATE_1;
+    sm->stateFunctions[STATE_2] 	= handleSTATE_2;
+    sm->stateFunctions[STATE_3] 	= handleSTATE_3;
+    sm->stateFunctions[STATE_4] 	= handleSTATE_4;
+    sm->stateFunctions[STATE_5] 	= handleSTATE_5;
+    sm->stateFunctions[STATE_6] 	= handleSTATE_6;
 }
 
 /**
@@ -60,195 +59,159 @@ void handleEvent(StateMachine* sm, Event event) {
  *----------------------------------------------------------------------------*/
 
 /**
- * @brief Handle events in the Idle state.
+ * @brief Handle events in the State 1.
  * @param sm: Pointer to the state machine structure
  * @param event: Event to be handled
  */
-static inline void handleIdle(struct StateMachine* sm, Event event) {
-    setTX(&rs485Data, &rs485Data.readyTX, READY);
+static inline void handleSTATE_1(struct StateMachine* sm, Event event) {
     switch (event) {
-        case EVENT_ERROR_COM:
-        case EVENT_ERROR_MOD:
-            sm->currentState = STATE_ERROR;
-            error_func(event);
+        case EVENT_1:
+        case EVENT_2:
+            sm->currentState = STATE_6;
+            STATE_6_func(void);
             break;
-        case EVENT_HOT:
-            sm->currentState = STATE_COOLING;
-            cool_func();
+        case EVENT_3:
+            sm->currentState = STATE_3;
+            STATE_3_func();
             break;
-        case EVENT_START:
-            sm->currentState = STATE_START;
-            start_func();
+        case EVENT_4:
+            sm->currentState = STATE_5;
+            STATE_5_func();
             break;
 
         // Ignored events
-        case EVENT_STOP:
-        case EVENT_ERROR_HW:
-        case EVENT_RESET:
-        case EVENT_COOL:
         case EVENT_MAX:
+        case EVENT_5:
         default:
-            idle_func();
+            STATE_1_func();
             break;
     }
 }
 
 
 /**
- * @brief Handle events in the Start state.
+ * @brief Handle events in the State 2.
  * @param sm: Pointer to the state machine structure
  * @param event: Event to be handled
  */
-static inline void handleStart(struct StateMachine* sm, Event event) {
-    setTX(&rs485Data, &rs485Data.readyTX, READY);
+static inline void handleSTATE_2(struct StateMachine* sm, Event event) {
     switch (event) {
-        case EVENT_ERROR_COM:
-        case EVENT_ERROR_MOD:
-        case EVENT_ERROR_HW:
-            sm->currentState = STATE_ERROR;
-            error_func(event);
+        case EVENT_1:
+        case EVENT_2:
+        case EVENT_3:
+            sm->currentState = STATE_6;
+            STATE_6_func(void);
             break;
-        case EVENT_HOT:
-            sm->currentState = STATE_COOLING;
-            cool_func();
+        case EVENT_4:
+            sm->currentState = STATE_5;
+            STATE_5_func();
             break;
-        case EVENT_STOP:
-            sm->currentState = STATE_STOP;
-            stop_func();
-            break;
-
         // Ignored events
-        case EVENT_START:
-        case EVENT_RESET:
-        case EVENT_COOL:
+        case EVENT_5:
         case EVENT_MAX:
         default:
-            start_func();
+            STATE_2_func();
             break;
     }
 }
 
 
 /**
- * @brief Handle events in the Cooling state.
+ * @brief Handle events in the State 3.
  * @param sm: Pointer to the state machine structure
  * @param event: Event to be handled
  */
-static inline void handleCooling(struct StateMachine* sm, Event event) {
+static inline void handleSTATE_3(struct StateMachine* sm, Event event) {
     setTX(&rs485Data, &rs485Data.readyTX, READY);
     switch (event) {
-        case EVENT_ERROR_COM:
-        case EVENT_ERROR_HW:
-        case EVENT_ERROR_MOD:
-            sm->currentState = STATE_ERROR;
-            error_func(event);
+        case EVENT_4:
+        case EVENT_2:
+        case EVENT_5:
+            sm->currentState = STATE_3;
+            STATE_3_func(event);
             break;
-        case EVENT_START:
-            sm->currentState = STATE_START;
-            start_func();
-            break;
-        case EVENT_STOP:
-            sm->currentState = STATE_STOP;
-            stop_func();
-            break;
-        case EVENT_MAX:
-            sm->currentState = STATE_IDLE;
-            idle_func();
-            break;
-
         // Ignored events
-        case EVENT_HOT:
-        case EVENT_COOL:
-        case EVENT_RESET:
+        case EVENT_1:
+        case EVENT_3:
+        case EVENT_MAX:
         default:
-            cool_func();
+            STATE_3_func();
             break;
     }
 }
 
 
 /**
- * @brief Handle events in the Stop state.
+ * @brief Handle events in the State 4.
  * @param sm: Pointer to the state machine structure
  * @param event: Event to be handled
  */
-static inline void handleStop(struct StateMachine* sm, Event event) {
+static inline void handleSTATE_4(struct StateMachine* sm, Event event) {
     setTX(&rs485Data, &rs485Data.readyTX, READY);
     switch (event) {
-        case EVENT_ERROR_COM:
-        case EVENT_ERROR_MOD:
-            sm->currentState = STATE_ERROR;
-            error_func(event);
+        case EVENT_4:
+        case EVENT_2:
+        case EVENT_5:
+            sm->currentState = STATE_3;
+            STATE_3_func(event);
             break;
-
         // Ignored events
-        case EVENT_STOP:
-        case EVENT_START:
-        case EVENT_ERROR_HW:
-        case EVENT_RESET:
-        case EVENT_COOL:
-        case EVENT_HOT:
+        case EVENT_1:
+        case EVENT_3:
         case EVENT_MAX:
         default:
-            stop_func();
+            STATE_4_func();
             sm->currentState = STATE_IDLE;
             break;
     }
 }
 
 /**
- * @brief Handle events in the Error state.
+ * @brief Handle events in the State 5.
  * @param sm: Pointer to the state machine structure
  * @param event: Event to be handled
  */
-static inline void handleError(struct StateMachine* sm, Event event) {
+static inline void handleSTATE_5(struct StateMachine* sm, Event event) {
     switch (event) {
-        case EVENT_RESET:
-            sm->currentState = STATE_RESET;
-            break;
-        case EVENT_MAX:
-            sm->currentState = STATE_IDLE;
-            idle_func();
+        case EVENT_1:
+        case EVENT_2:
+        case EVENT_3:
+            sm->currentState = STATE_6;
+            STATE_6_func(void);
             break;
 
         // Ignored events
-        case EVENT_START:
-        case EVENT_STOP:
-        case EVENT_ERROR_HW:
-        case EVENT_COOL:
-        case EVENT_HOT:
-        case EVENT_ERROR_COM:
-        case EVENT_ERROR_MOD:
+        case EVENT_4:
+        case EVENT_5:
+        case EVENT_MAX:
         default:
-            error_func(event);
+            STATE_5_func(event);
             break;
     }
 }
 
 
 /**
- * @brief Handle events in the Reset state.
+ * @brief Handle events in the State 6.
  * @param sm: Pointer to the state machine structure
  * @param event: Event to be handled
  */
-static inline void handleReset(struct StateMachine* sm, Event event) {
+static inline void handleSTATE_6(struct StateMachine* sm, Event event) {
     setTX(&rs485Data, &rs485Data.readyTX, NOT_READY);
     switch (event) {
-        case EVENT_MAX:
-            sm->currentState = STATE_IDLE;
-            idle_func();
+        case EVENT_1:
+        case EVENT_2:
+        case EVENT_3:
+            sm->currentState = STATE_6;
+            STATE_6_func(void);
             break;
 
-        // Silently ignored events
-        case EVENT_START:
-        case EVENT_STOP:
-        case EVENT_ERROR_HW:
-        case EVENT_RESET:
-        case EVENT_COOL:
-        case EVENT_HOT:
-        case EVENT_ERROR_COM:
-        case EVENT_ERROR_MOD:
+        // Ignored events
+        case EVENT_4:
+        case EVENT_5:
+        case EVENT_MAX:
         default:
+        STATE_6_func();
             break;
     }
 }
@@ -257,88 +220,43 @@ static inline void handleReset(struct StateMachine* sm, Event event) {
  *----------------------------------------------------------------------------*/
 
 /**
- * @brief Perform actions for the Idle state.
+ * @brief Perform actions for the State 1.
  */
-void idle_func(void) {
-    ActuatorOff();
+void STATE_1_func(void) {
+    //Include desired functions
 }
 
 /**
- * @brief Perform actions for the Start state.
+ * @brief Perform actions for the State 2.
  */
-void start_func(void) {
-    ActuatorOn();
+void STATE_2_func(void) {
+   //Include desired functions
 }
 
 /**
- * @brief Perform actions for the Cooling state.
+ * @brief Perform actions for the State 3.
  */
-void cool_func(void) {
-    ActuatorOn();
+void STATE_3_func(void) {
+    //Include desired functions
 }
 
 /**
- * @brief Perform actions for the Stop state.
+ * @brief Perform actions for the State 4.
  */
-void stop_func(void) {
-	ActuatorOff();
+void STATE_4_func(void) {
+	//Include desired functions
 }
 
 /**
- * @brief Perform actions for the Reset state.
+ * @brief Perform actions for the State 5.
  */
-void reset_func() {
-    // Handle null state
-	ActuatorOff();
+void STATE_5_func() {
+	//Include desired functions
 }
 
-
 /**
- * @brief Handle errors based on the event.
- * @param event: The event that triggered the error
+ * @brief Perform actions for the State 6.
  */
-void error_func(int event) {
-    setTX(&rs485Data, &rs485Data.readyTX, NOT_READY);
-
-    if (event == EVENT_ERROR_COM) {
-    	blinkIndicator(LED_MODE_ON, 0);
-        setTX(&rs485Data, &rs485Data.readyTX, NOT_READY);
-        CheckCanaries(&CSMS_Queue); // Check for com buffer overflow
-        ActuatorOff();
-
-        // Check whether error is resolved
-        if (rs485Data.charging == CHARGING || rs485Data.charging == NOT_CHARGING) {
-            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
-            handleEvent(&sm, EVENT_MAX);
-        }
-
-    } else if (event == EVENT_ERROR_MOD) {
-
-        // Current Leak Check
-        while (rs485Data.moduleCurrent > CURRENT_ERROR && rs485Data.charging == NOT_CHARGING) {
-            ActuatorOff();
-            setTX(&rs485Data, &rs485Data.ModuleError, SET_CURRENT_LEAK);  // current leak
-            CSMS_functions();
-            transmitSerial();
-            blinkIndicator(LED_MODE_BLINK, 3000);
-            HAL_IWDG_Refresh(&hiwdg);
-        }
-
-        // Overheat Check
-        while (rs485Data.moduleTemperature > TEMPHIGH_THRESHOLD) {
-            ActuatorOn();
-            setTX(&rs485Data, &rs485Data.ModuleError, SET_MODULE_OVERHEAT);  // module overheat
-            CSMS_functions();
-            transmitSerial();
-            blinkIndicator(LED_MODE_BLINK, 1000);
-            HAL_IWDG_Refresh(&hiwdg);  // Watchdog timer reset at 1000ms
-        }
-
-    } else {
-        setTX(&rs485Data, &rs485Data.ActuatorError, SET_NO_ERROR);
-        setTX(&rs485Data, &rs485Data.ModuleError, SET_NO_ERROR);
-        handleEvent(&sm, EVENT_MAX);
-    }
-
-    blinkIndicator(LED_MODE_OFF, 0);
+void STATE_6_func() {
+    //Include desired functions
 }

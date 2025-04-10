@@ -71,19 +71,11 @@ void handleEvent(struct StateMachine* sm, Event event);
 extern struct StateMachine sm;
 
 /* Function prototypes for state-specific actions */
-void idle_func(void);
-void start_func(void);
-void cool_func(void);
-void stop_func(void);
-void error_func(int event);
-void reset_func(void);
-void handleCommunicationError(void);
-void handleHardwareError(void);
-void handleModuleError(void);
-void resetErrorsAndState(void);
-void performSystemTasks(void);
-
-
-
+void STATE_1_func(void);
+void STATE_2_func(void);
+void STATE_3_func(void);
+void STATE_4_func(void);
+void STATE_5_func(void);
+void STATE_6_func(void);
 
 #endif /* INC_STATEMACHINE_H_ */
